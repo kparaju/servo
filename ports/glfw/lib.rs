@@ -8,11 +8,11 @@
 #![feature(macro_rules)]
 #![deny(unused_imports, unused_variables)]
 
-extern crate alert;
 #[cfg(target_os="macos")]
 extern crate cgl;
 extern crate compositing;
 extern crate geom;
+extern crate gleam;
 extern crate glfw;
 extern crate layers;
 extern crate libc;

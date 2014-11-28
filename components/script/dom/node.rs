@@ -1216,17 +1216,15 @@ impl Node {
         // Step 4-5.
         match node.type_id() {
             TextNodeTypeId => {
-                match node.parent_node().root() {
-                    Some(ref parent) if parent.is_document() => return Err(HierarchyRequest),
-                    _ => ()
+                if parent.is_document() {
+                    return Err(HierarchyRequest);
                 }
-            }
+            },
             DoctypeNodeTypeId => {
-                match node.parent_node().root() {
-                    Some(ref parent) if !parent.is_document() => return Err(HierarchyRequest),
-                    _ => ()
+                if !parent.is_document() {
+                    return Err(HierarchyRequest);
                 }
-            }
+            },
             DocumentFragmentNodeTypeId |
             ElementNodeTypeId(_) |
             ProcessingInstructionNodeTypeId |
@@ -1560,7 +1558,7 @@ impl Node {
                         &Attr::new(*window,
                                    attr.local_name().clone(), attr.value().clone(),
                                    attr.name().clone(), attr.namespace().clone(),
-                                   attr.prefix().clone(), copy_elem));
+                                   attr.prefix().clone(), Some(copy_elem)));
                 }
             },
             _ => ()

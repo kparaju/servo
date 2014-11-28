@@ -11,7 +11,8 @@ use block::{ISizeConstraintInput, ISizeConstraintSolution};
 use construct::FlowConstructor;
 use context::LayoutContext;
 use floats::FloatKind;
-use flow::{TableFlowClass, FlowClass, Flow, ImmutableFlowUtils};
+use flow::{Flow, FlowClass, IMPACTED_BY_LEFT_FLOATS, IMPACTED_BY_RIGHT_FLOATS, ImmutableFlowUtils};
+use flow::{TableFlowClass};
 use fragment::{Fragment, FragmentBoundsIterator};
 use layout_debug;
 use model::{IntrinsicISizes, IntrinsicISizesContribution};
@@ -264,12 +265,9 @@ impl Flow for TableFlow {
                 // if there are any, or among all the columns if all are specified.
                 if total_column_inline_size < content_inline_size &&
                         num_unspecified_inline_sizes == 0 {
-                    let extra_column_inline_size = content_inline_size;
-                        (content_inline_size - total_column_inline_size) /
-                            (self.column_inline_sizes.len() as i32);
+                    let ratio = content_inline_size.to_subpx() / total_column_inline_size.to_subpx();
                     for column_inline_size in self.column_inline_sizes.iter_mut() {
-                        column_inline_size.minimum_length = column_inline_size.minimum_length +
-                            extra_column_inline_size;
+                        column_inline_size.minimum_length = column_inline_size.minimum_length.scale_by(ratio);
                         column_inline_size.percentage = 0.0;
                     }
                 } else if num_unspecified_inline_sizes != 0 {
@@ -290,8 +288,8 @@ impl Flow for TableFlow {
         }
 
         // As tables are always wrapped inside a table wrapper, they are never impacted by floats.
-        self.block_flow.base.flags.set_impacted_by_left_floats(false);
-        self.block_flow.base.flags.set_impacted_by_right_floats(false);
+        self.block_flow.base.flags.remove(IMPACTED_BY_LEFT_FLOATS);
+        self.block_flow.base.flags.remove(IMPACTED_BY_RIGHT_FLOATS);
 
         self.block_flow.propagate_assigned_inline_size_to_children(
             inline_start_content_edge,

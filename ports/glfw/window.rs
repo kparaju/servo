@@ -6,20 +6,20 @@
 
 use NestedEventLoopListener;
 
-use alert::{Alert, AlertMethods};
 use compositing::compositor_task::{mod, CompositorProxy, CompositorReceiver};
 use compositing::windowing::{Forward, Back};
-use compositing::windowing::{IdleWindowEvent, ResizeWindowEvent, LoadUrlWindowEvent};
+use compositing::windowing::{IdleWindowEvent, ResizeWindowEvent};
 use compositing::windowing::{KeyEvent, MouseWindowClickEvent, MouseWindowMouseDownEvent};
 use compositing::windowing::{MouseWindowEventClass,  MouseWindowMoveEventClass};
 use compositing::windowing::{MouseWindowMouseUpEvent, RefreshWindowEvent};
 use compositing::windowing::{NavigationWindowEvent, ScrollWindowEvent, ZoomWindowEvent};
 use compositing::windowing::{PinchZoomWindowEvent, QuitWindowEvent};
-use compositing::windowing::{WindowEvent, WindowMethods, FinishedWindowEvent};
+use compositing::windowing::{WindowEvent, WindowMethods};
 use geom::point::{Point2D, TypedPoint2D};
 use geom::scale_factor::ScaleFactor;
 use geom::size::TypedSize2D;
 use glfw::{mod, Context};
+use gleam::gl;
 use layers::geometry::DevicePixel;
 use layers::platform::surface::NativeGraphicsMetadata;
 use libc::c_int;
@@ -62,6 +62,8 @@ impl Window {
                                                        "Servo", glfw::Windowed)
             .expect("Failed to create GLFW window");
         glfw_window.make_current();
+
+        gl::load_with(|s| glfw_window.get_proc_address(s));
 
         // Create our window object.
         let window = Window {
@@ -159,13 +161,6 @@ impl WindowMethods for Window {
 
     /// Sets the render state.
     fn set_render_state(&self, render_state: RenderState) {
-        if self.ready_state.get() == FinishedLoading &&
-            self.render_state.get() == RenderingRenderState &&
-            render_state == IdleRenderState {
-            // page loaded
-            self.event_queue.borrow_mut().push(FinishedWindowEvent);
-        }
-
         self.render_state.set(render_state);
         self.update_window_title()
     }
@@ -298,21 +293,21 @@ impl Window {
 
         match self.ready_state.get() {
             Blank => {
-                self.glfw_window.set_title("blank — Servo")
+                self.glfw_window.set_title("blank — Servo [GLFW]")
             }
             Loading => {
-                self.glfw_window.set_title("Loading — Servo")
+                self.glfw_window.set_title("Loading — Servo [GLFW]")
             }
             PerformingLayout => {
-                self.glfw_window.set_title("Performing Layout — Servo")
+                self.glfw_window.set_title("Performing Layout — Servo [GLFW]")
             }
             FinishedLoading => {
                 match self.render_state.get() {
                     RenderingRenderState => {
-                        self.glfw_window.set_title("Rendering — Servo")
+                        self.glfw_window.set_title("Rendering — Servo [GLFW]")
                     }
                     IdleRenderState => {
-                        self.glfw_window.set_title("Servo")
+                        self.glfw_window.set_title("Servo [GLFW]")
                     }
                 }
             }
@@ -323,7 +318,6 @@ impl Window {
     fn handle_key(&self, key: glfw::Key, mods: glfw::Modifiers) {
         match key {
             glfw::KeyEscape => self.glfw_window.set_should_close(true),
-            glfw::KeyL if mods.contains(glfw::Control) => self.load_url(), // Ctrl+L
             glfw::KeyEqual if mods.contains(glfw::Control) => { // Ctrl-+
                 self.event_queue.borrow_mut().push(ZoomWindowEvent(1.1));
             }
@@ -379,19 +373,6 @@ impl Window {
             _ => panic!("I cannot recognize the type of mouse action that occured. :-(")
         };
         self.event_queue.borrow_mut().push(MouseWindowEventClass(event));
-    }
-
-    /// Helper function to pop up an alert box prompting the user to load a URL.
-    fn load_url(&self) {
-        let mut alert: Alert = AlertMethods::new("Navigate to:");
-        alert.add_prompt();
-        alert.run();
-        let value = alert.prompt_value();
-        if "" == value.as_slice() {    // To avoid crashing on Linux.
-            self.event_queue.borrow_mut().push(LoadUrlWindowEvent("http://purple.com/".to_string()))
-        } else {
-            self.event_queue.borrow_mut().push(LoadUrlWindowEvent(value.clone()))
-        }
     }
 }
 

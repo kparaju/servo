@@ -5,6 +5,7 @@ dependencies = [
  "compositing 0.0.1",
  "gfx 0.0.1",
  "glfw_app 0.0.1",
+ "glutin_app 0.0.1",
  "green 0.0.1 (git+https://github.com/servo/green-rs?ref=servo)",
  "layout 0.0.1",
  "msg 0.0.1",
@@ -16,18 +17,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "alert"
-version = "0.1.0"
-source = "git+https://github.com/servo/rust-alert#9bd18fc406683bae448bc6f5d546872970af252e"
+name = "android_glue"
+version = "0.0.1"
+source = "git+https://github.com/tomaka/android-rs-glue#fe9acb5bd465da1df4561e2bd4ebcc6d305134a4"
 dependencies = [
- "cocoa 0.1.1 (git+https://github.com/servo/rust-cocoa)",
- "core_foundation 0.1.0 (git+https://github.com/servo/rust-core-foundation)",
+ "compile_msg 0.1.1 (git+https://github.com/huonw/compile_msg)",
 ]
 
 [[package]]
 name = "azure"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-azure#612ffc4fbf80c1bd5faae4b86dfc539dda06fb0c"
+source = "git+https://github.com/servo/rust-azure#64853170e435d9320f3fd828b9e7d16bc4c260a3"
 dependencies = [
  "core_foundation 0.1.0 (git+https://github.com/servo/rust-core-foundation)",
  "core_graphics 0.1.0 (git+https://github.com/servo/rust-core-graphics)",
@@ -60,13 +60,17 @@ dependencies = [
 [[package]]
 name = "cocoa"
 version = "0.1.1"
-source = "git+https://github.com/servo/rust-cocoa#f926323d306401df33f528c9aeca8e582cad063b"
+source = "git+https://github.com/servo/rust-cocoa#78b823bec1affcab20b6977e1057125088a6034c"
+
+[[package]]
+name = "compile_msg"
+version = "0.1.1"
+source = "git+https://github.com/huonw/compile_msg#f526abe54b49642bc1e969e6c2af1411798b6776"
 
 [[package]]
 name = "compositing"
 version = "0.0.1"
 dependencies = [
- "alert 0.1.0 (git+https://github.com/servo/rust-alert)",
  "azure 0.1.0 (git+https://github.com/servo/rust-azure)",
  "core_graphics 0.1.0 (git+https://github.com/servo/rust-core-graphics)",
  "core_text 0.1.0 (git+https://github.com/servo/rust-core-text)",
@@ -203,7 +207,7 @@ source = "git+https://github.com/servo/rust-freetype#e55b06110fb2d74a2db68ead740
 [[package]]
 name = "freetype-sys"
 version = "2.4.11"
-source = "git+https://github.com/servo/libfreetype2#5b6499164106f094937565595c7b96d07de55521"
+source = "git+https://github.com/servo/libfreetype2#f5c49c0da1d5bc6b206c4176344012ac37524243"
 
 [[package]]
 name = "geom"
@@ -227,6 +231,7 @@ dependencies = [
  "net 0.0.1",
  "plugins 0.0.1",
  "png 0.1.0 (git+https://github.com/servo/rust-png)",
+ "script_traits 0.0.1",
  "stb_image 0.1.0 (git+https://github.com/servo/rust-stb-image)",
  "style 0.0.1",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -251,7 +256,7 @@ dependencies = [
 [[package]]
 name = "gleam"
 version = "0.0.1"
-source = "git+https://github.com/servo/gleam#8e77178eaebddfeae6557dfec2bcccbefaba93f3"
+source = "git+https://github.com/servo/gleam#aaea38be25ce9de6e1e8620fa5b554669ac6475c"
 dependencies = [
  "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs.git)",
 ]
@@ -274,11 +279,38 @@ source = "git+https://github.com/servo/glfw?ref=cargo-3.0.4#765dace7e4125b87c764
 name = "glfw_app"
 version = "0.0.1"
 dependencies = [
- "alert 0.1.0 (git+https://github.com/servo/rust-alert)",
  "cgl 0.0.1 (git+https://github.com/servo/rust-cgl)",
  "compositing 0.0.1",
  "geom 0.1.0 (git+https://github.com/servo/rust-geom)",
+ "gleam 0.0.1 (git+https://github.com/servo/gleam)",
  "glfw 0.0.1 (git+https://github.com/servo/glfw-rs?ref=servo)",
+ "layers 0.1.0 (git+https://github.com/servo/rust-layers)",
+ "msg 0.0.1",
+ "util 0.0.1",
+]
+
+[[package]]
+name = "glutin"
+version = "0.0.2"
+source = "git+https://github.com/tomaka/glutin#c95b778e2c077c0b410f366ad3c85a93c40c6095"
+dependencies = [
+ "android_glue 0.0.1 (git+https://github.com/tomaka/android-rs-glue)",
+ "cocoa 0.1.1 (git+https://github.com/servo/rust-cocoa)",
+ "compile_msg 0.1.1 (git+https://github.com/huonw/compile_msg)",
+ "core_graphics 0.1.0 (git+https://github.com/servo/rust-core-graphics)",
+ "gl_common 0.0.1 (git+https://github.com/bjz/gl-rs.git)",
+ "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs.git)",
+]
+
+[[package]]
+name = "glutin_app"
+version = "0.0.1"
+dependencies = [
+ "cgl 0.0.1 (git+https://github.com/servo/rust-cgl)",
+ "compositing 0.0.1",
+ "geom 0.1.0 (git+https://github.com/servo/rust-geom)",
+ "gleam 0.0.1 (git+https://github.com/servo/gleam)",
+ "glutin 0.0.2 (git+https://github.com/tomaka/glutin)",
  "layers 0.1.0 (git+https://github.com/servo/rust-layers)",
  "msg 0.0.1",
  "util 0.0.1",
@@ -295,7 +327,7 @@ dependencies = [
 [[package]]
 name = "green"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/servo/green-rs?ref=servo#9300d7e7dc73680c7446d78b10a309095636e64d"
 
 [[package]]
 name = "harfbuzz"
@@ -357,7 +389,7 @@ source = "git+https://github.com/bjz/gl-rs.git#79cd3b3f9f19aa0e39f6af572fc8673a6
 [[package]]
 name = "layers"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-layers#84f6dd677aa681b03cfcbf89000d2c7b12684bd3"
+source = "git+https://github.com/servo/rust-layers#b068d2a96d54bf173b548aece36f5ea4ef9353cf"
 dependencies = [
  "cgl 0.0.1 (git+https://github.com/servo/rust-cgl)",
  "core_foundation 0.1.0 (git+https://github.com/servo/rust-core-foundation)",
@@ -481,10 +513,10 @@ source = "git+https://github.com/netvl/rust-xml#d6c57380a300b94f7e7881979dbe5459
 [[package]]
 name = "rustuv"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/servo/green-rs?ref=servo#9300d7e7dc73680c7446d78b10a309095636e64d"
 dependencies = [
  "green 0.0.1 (git+https://github.com/servo/green-rs?ref=servo)",
- "tls 0.0.1 (git+https://github.com/servo/green-rs?ref=servo)",
+ "tls 0.0.1 (git+https://github.com/alexcrichton/tls-rs)",
 ]
 
 [[package]]
@@ -532,7 +564,7 @@ source = "git+https://github.com/rust-lang/semver#7dca047a9cd40e929a4545b37a1917
 [[package]]
 name = "skia-sys"
 version = "0.0.20130412"
-source = "git+https://github.com/servo/skia#d92603043a9b7dd0b25c0b3b562099a0cc32ac6c"
+source = "git+https://github.com/servo/skia#63e40419e2570646a8d83fefb8914d6e1b786cfb"
 dependencies = [
  "expat-sys 2.1.0 (git+https://github.com/servo/libexpat)",
  "freetype-sys 2.4.11 (git+https://github.com/servo/libfreetype2)",
@@ -585,7 +617,7 @@ version = "0.0.1"
 [[package]]
 name = "tls"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/alexcrichton/tls-rs#2abeb8996f3795f1e870523b7684dcc2ce64fa85"
 
 [[package]]
 name = "url"

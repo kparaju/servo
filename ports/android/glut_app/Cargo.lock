@@ -2,7 +2,6 @@
 name = "glut_app"
 version = "0.0.1"
 dependencies = [
- "alert 0.1.0 (git+https://github.com/servo/rust-alert)",
  "compositing 0.0.1",
  "egl 0.1.0 (git+https://github.com/servo/rust-egl)",
  "geom 0.1.0 (git+https://github.com/servo/rust-geom)",
@@ -11,15 +10,6 @@ dependencies = [
  "msg 0.0.1",
  "servo 0.0.1",
  "util 0.0.1",
-]
-
-[[package]]
-name = "alert"
-version = "0.1.0"
-source = "git+https://github.com/servo/rust-alert#9bd18fc406683bae448bc6f5d546872970af252e"
-dependencies = [
- "cocoa 0.1.1 (git+https://github.com/servo/rust-cocoa)",
- "core_foundation 0.1.0 (git+https://github.com/servo/rust-core-foundation)",
 ]
 
 [[package]]
@@ -56,15 +46,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "cocoa"
-version = "0.1.1"
-source = "git+https://github.com/servo/rust-cocoa#f926323d306401df33f528c9aeca8e582cad063b"
-
-[[package]]
 name = "compositing"
 version = "0.0.1"
 dependencies = [
- "alert 0.1.0 (git+https://github.com/servo/rust-alert)",
  "azure 0.1.0 (git+https://github.com/servo/rust-azure)",
  "core_graphics 0.1.0 (git+https://github.com/servo/rust-core-graphics)",
  "core_text 0.1.0 (git+https://github.com/servo/rust-core-text)",
@@ -225,6 +209,7 @@ dependencies = [
  "net 0.0.1",
  "plugins 0.0.1",
  "png 0.1.0 (git+https://github.com/servo/rust-png)",
+ "script_traits 0.0.1",
  "stb_image 0.1.0 (git+https://github.com/servo/rust-stb-image)",
  "style 0.0.1",
  "url 0.1.0 (git+https://github.com/servo/rust-url)",
@@ -249,7 +234,7 @@ dependencies = [
 [[package]]
 name = "gleam"
 version = "0.0.1"
-source = "git+https://github.com/servo/gleam#8e77178eaebddfeae6557dfec2bcccbefaba93f3"
+source = "git+https://github.com/servo/gleam#aaea38be25ce9de6e1e8620fa5b554669ac6475c"
 dependencies = [
  "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs.git)",
 ]
@@ -273,7 +258,7 @@ dependencies = [
 [[package]]
 name = "green"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/servo/green-rs?ref=servo#9300d7e7dc73680c7446d78b10a309095636e64d"
 
 [[package]]
 name = "harfbuzz"
@@ -335,7 +320,7 @@ source = "git+https://github.com/bjz/gl-rs.git#79cd3b3f9f19aa0e39f6af572fc8673a6
 [[package]]
 name = "layers"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-layers#84f6dd677aa681b03cfcbf89000d2c7b12684bd3"
+source = "git+https://github.com/servo/rust-layers#0f6edd58b3b572f2aac97567b752c15db5fa1982"
 dependencies = [
  "cgl 0.0.1 (git+https://github.com/servo/rust-cgl)",
  "core_foundation 0.1.0 (git+https://github.com/servo/rust-core-foundation)",
@@ -464,10 +449,10 @@ source = "git+https://github.com/netvl/rust-xml#d6c57380a300b94f7e7881979dbe5459
 [[package]]
 name = "rustuv"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/servo/green-rs?ref=servo#9300d7e7dc73680c7446d78b10a309095636e64d"
 dependencies = [
  "green 0.0.1 (git+https://github.com/servo/green-rs?ref=servo)",
- "tls 0.0.1 (git+https://github.com/servo/green-rs?ref=servo)",
+ "tls 0.0.1 (git+https://github.com/alexcrichton/tls-rs)",
 ]
 
 [[package]]
@@ -579,7 +564,7 @@ version = "0.0.1"
 [[package]]
 name = "tls"
 version = "0.0.1"
-source = "git+https://github.com/servo/green-rs?ref=servo#332144c9d876e5df00235a72c0563b6b12473dcf"
+source = "git+https://github.com/alexcrichton/tls-rs#2abeb8996f3795f1e870523b7684dcc2ce64fa85"
 
 [[package]]
 name = "url"

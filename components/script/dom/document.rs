@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use dom::attr::AttrHelpers;
+use dom::attr::{Attr, AttrHelpers, StringAttrValue};
 use dom::bindings::cell::DOMRefCell;
 use dom::bindings::codegen::Bindings::DocumentBinding;
 use dom::bindings::codegen::Bindings::DocumentBinding::{DocumentMethods, DocumentReadyState};
@@ -46,6 +46,7 @@ use dom::htmlhtmlelement::HTMLHtmlElement;
 use dom::htmltitleelement::HTMLTitleElement;
 use dom::location::Location;
 use dom::mouseevent::MouseEvent;
+use dom::keyboardevent::KeyboardEvent;
 use dom::node::{Node, ElementNodeTypeId, DocumentNodeTypeId, NodeHelpers};
 use dom::node::{CloneChildren, DoNotCloneChildren};
 use dom::nodelist::NodeList;
@@ -567,7 +568,11 @@ impl<'a> DocumentMethods for JSRef<'a, Document> {
             debug!("Not a valid element name");
             return Err(InvalidCharacter);
         }
-        let local_name = local_name.as_slice().to_ascii_lower();
+        let local_name = if self.is_html_document {
+            local_name.as_slice().to_ascii_lower()
+        } else {
+            local_name
+        };
         let name = QualName::new(ns!(HTML), Atom::from_slice(local_name.as_slice()));
         Ok(Element::create(name, None, self, ScriptCreated))
     }
@@ -615,6 +620,22 @@ impl<'a> DocumentMethods for JSRef<'a, Document> {
         let name = QualName::new(ns, Atom::from_slice(local_name_from_qname));
         Ok(Element::create(name, prefix_from_qname.map(|s| s.to_string()), self,
                            ScriptCreated))
+    }
+
+    // http://dom.spec.whatwg.org/#dom-document-createattribute
+    fn CreateAttribute(self, local_name: DOMString) -> Fallible<Temporary<Attr>> {
+        if xml_name_type(local_name.as_slice()) == InvalidXMLName {
+            debug!("Not a valid element name");
+            return Err(InvalidCharacter);
+        }
+
+        let window = self.window.root();
+        let name = Atom::from_slice(local_name.as_slice());
+        // repetition used because string_cache::atom::Atom is non-copyable
+        let l_name = Atom::from_slice(local_name.as_slice());
+        let value = StringAttrValue("".to_string());
+
+        Ok(Attr::new(*window, name, value, l_name, ns!(""), None, None))
     }
 
     // http://dom.spec.whatwg.org/#dom-document-createdocumentfragment
@@ -693,6 +714,8 @@ impl<'a> DocumentMethods for JSRef<'a, Document> {
                 CustomEvent::new_uninitialized(&global::Window(*window)))),
             "htmlevents" | "events" | "event" => Ok(Event::new_uninitialized(
                 &global::Window(*window))),
+            "keyboardevent" | "keyevents" => Ok(EventCast::from_temporary(
+                KeyboardEvent::new_uninitialized(*window))),
             _ => Err(NotSupported)
         }
     }

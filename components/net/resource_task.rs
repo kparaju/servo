@@ -25,7 +25,7 @@ use servo_util::task::spawn_named;
 
 pub enum ControlMsg {
     /// Request the data associated with a particular URL
-    Load(LoadData, Sender<LoadResponse>),
+    Load(LoadData),
     Exit
 }
 
@@ -36,18 +36,18 @@ pub struct LoadData {
     pub headers: RequestHeaderCollection,
     pub data: Option<Vec<u8>>,
     pub cors: Option<ResourceCORSData>,
-    pub next_rx: Option<Sender<LoadResponse>>
+    pub consumer: Sender<LoadResponse>,
 }
 
 impl LoadData {
-    pub fn new(url: Url) -> LoadData {
+    pub fn new(url: Url, consumer: Sender<LoadResponse>) -> LoadData {
         LoadData {
             url: url,
             method: Get,
             headers: RequestHeaderCollection::new(),
             data: None,
             cors: None,
-            next_rx: None
+            consumer: consumer,
         }
     }
 }
@@ -119,10 +119,16 @@ pub struct LoadResponse {
     /// Port for reading data.
     pub progress_port: Receiver<ProgressMsg>,
 }
-/// For the use of Loaders to receive Load Response
+/// A LoadResponse directed at a particular consumer
 pub struct TargetedLoadResponse {
-  pub load_response: LoadResponse,
-  pub sender: Sender<LoadResponse>,
+    pub load_response: LoadResponse,
+    pub consumer: Sender<LoadResponse>,
+}
+
+// Data structure containing ports
+pub struct ResponseSenders {
+    pub immediate_consumer: Sender<TargetedLoadResponse>,
+    pub eventual_consumer: Sender<LoadResponse>,
 }
 
 /// Messages sent in response to a `Load` message
@@ -135,19 +141,19 @@ pub enum ProgressMsg {
 }
 
 /// For use by loaders in responding to a Load message.
-pub fn start_sending(start_chan: Sender<TargetedLoadResponse>, next_rx: Sender<LoadResponse>, metadata: Metadata) -> Sender<ProgressMsg> {
-    start_sending_opt(start_chan, next_rx, metadata).ok().unwrap()
+pub fn start_sending(senders: ResponseSenders, metadata: Metadata) -> Sender<ProgressMsg> {
+    start_sending_opt(senders, metadata).ok().unwrap()
 }
 
 /// For use by loaders in responding to a Load message.
-pub fn start_sending_opt(start_chan: Sender<TargetedLoadResponse>, next_rx: Sender<LoadResponse>, metadata: Metadata) -> Result<Sender<ProgressMsg>, ()> {
+pub fn start_sending_opt(senders: ResponseSenders, metadata: Metadata) -> Result<Sender<ProgressMsg>, ()> {
     let (progress_chan, progress_port) = channel();
-    let result = start_chan.send_opt(TargetedLoadResponse {
+    let result = senders.immediate_consumer.send_opt(TargetedLoadResponse {
         load_response: LoadResponse {
             metadata:      metadata,
             progress_port: progress_port,
         },
-        sender: next_rx
+        consumer: senders.eventual_consumer
     });
     match result {
         Ok(_) => Ok(progress_chan),
@@ -159,7 +165,7 @@ pub fn start_sending_opt(start_chan: Sender<TargetedLoadResponse>, next_rx: Send
 pub fn load_whole_resource(resource_task: &ResourceTask, url: Url)
         -> Result<(Metadata, Vec<u8>), String> {
     let (start_chan, start_port) = channel();
-    resource_task.send(Load(LoadData::new(url), start_chan));
+    resource_task.send(Load(LoadData::new(url, start_chan)));
     let response = start_port.recv();
 
     let mut buf = vec!();
@@ -178,9 +184,9 @@ pub type ResourceTask = Sender<ControlMsg>;
 /// Create a ResourceTask
 pub fn new_resource_task(user_agent: Option<String>) -> ResourceTask {
     let (setup_chan, setup_port) = channel();
-    let mut snif_task = sniffer_task::new_sniffer_task();
+    let sniffer_task = sniffer_task::new_sniffer_task();
     spawn_named("ResourceManager", proc() {
-        ResourceManager::new(setup_port, user_agent, snif_task).start();
+        ResourceManager::new(setup_port, user_agent, sniffer_task).start();
     });
     setup_chan
 }
@@ -188,15 +194,15 @@ pub fn new_resource_task(user_agent: Option<String>) -> ResourceTask {
 struct ResourceManager {
     from_client: Receiver<ControlMsg>,
     user_agent: Option<String>,
-    snif_task: SnifferTask,
+    sniffer_task: SnifferTask,
 }
 
 impl ResourceManager {
-    fn new(from_client: Receiver<ControlMsg>, user_agent: Option<String>, snif_task: SnifferTask) -> ResourceManager {
+    fn new(from_client: Receiver<ControlMsg>, user_agent: Option<String>, sniffer_task: SnifferTask) -> ResourceManager {
         ResourceManager {
             from_client: from_client,
             user_agent: user_agent,
-            snif_task: snif_task,
+            sniffer_task: sniffer_task,
         }
     }
 }
@@ -206,8 +212,8 @@ impl ResourceManager {
     fn start(&self) {
         loop {
             match self.from_client.recv() {
-              Load(load_data, start_chan) => {
-                self.load(load_data, start_chan)
+              Load(load_data) => {
+                self.load(load_data)
               }
               Exit => {
                 break
@@ -216,10 +222,13 @@ impl ResourceManager {
         }
     }
 
-    fn load(&self, load_data: LoadData, start_chan: Sender<LoadResponse>) {
+    fn load(&self, load_data: LoadData) {
         let mut load_data = load_data;
         load_data.headers.user_agent = self.user_agent.clone();
-        load_data.next_rx = Some(start_chan.clone());
+        let senders = ResponseSenders {
+            immediate_consumer: self.sniffer_task.clone(),
+            eventual_consumer: load_data.consumer.clone(),
+        };
 
         let loader = match load_data.url.scheme.as_slice() {
             "file" => file_loader::factory,
@@ -228,21 +237,21 @@ impl ResourceManager {
             "about" => about_loader::factory,
             _ => {
                 debug!("resource_task: no loader for scheme {:s}", load_data.url.scheme);
-                start_sending(self.snif_task, start_chan.clone(), Metadata::default(load_data.url))
+                start_sending(senders, Metadata::default(load_data.url))
                     .send(Done(Err("no loader for scheme".to_string())));
                 return
             }
         };
         debug!("resource_task: loading url: {:s}", load_data.url.serialize());
 
-        loader(load_data, self.snif_task);
+        loader(load_data, self.sniffer_task.clone());
     }
 }
 
 /// Load a URL asynchronously and iterate over chunks of bytes from the response.
 pub fn load_bytes_iter(resource_task: &ResourceTask, url: Url) -> (Metadata, ProgressMsgPortIterator) {
     let (input_chan, input_port) = channel();
-    resource_task.send(Load(LoadData::new(url), input_chan));
+    resource_task.send(Load(LoadData::new(url, input_chan)));
 
     let response = input_port.recv();
     let iter = ProgressMsgPortIterator { progress_port: response.progress_port };
@@ -278,7 +287,7 @@ fn test_bad_scheme() {
     let resource_task = new_resource_task(None);
     let (start_chan, start) = channel();
     let url = Url::parse("bogus://whatever").unwrap();
-    resource_task.send(Load(LoadData::new(url), start_chan));
+    resource_task.send(Load(LoadData::new(url, start_chan)));
     let response = start.recv();
     match response.progress_port.recv() {
       Done(result) => { assert!(result.is_err()) }

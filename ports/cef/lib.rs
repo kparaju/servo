@@ -10,13 +10,15 @@
 #![feature(phase)]
 #[phase(plugin, link)]
 extern crate log;
+#[phase(plugin)]
+extern crate "plugins" as servo_plugins;
 
 extern crate rustuv;
 
-extern crate "plugins" as servo_plugins;
 extern crate servo;
 
 extern crate azure;
+extern crate compositing;
 extern crate geom;
 extern crate gfx;
 extern crate glfw;
@@ -52,6 +54,8 @@ pub mod request;
 pub mod string;
 pub mod string_list;
 pub mod string_map;
+pub mod string_multimap;
+pub mod switches;
 pub mod task;
 pub mod types;
 pub mod urlrequest;
