@@ -291,13 +291,13 @@ struct BinaryOrPlaintextClassifier;
 impl BinaryOrPlaintextClassifier {
     fn classify_impl(&self, data: &Vec<u8>) -> Option<(&'static str,&'static str)> {
         if (data.len() >=2 &&
-            ((data[0] == 0xFFu8 && data[1] == 0xFEu8) ||
-            (data[0] == 0xFEu8 && data[1] == 0xFFu8))) ||
+            (data[0] == 0xFFu8 && data[1] == 0xFEu8) ||
+            (data[0] == 0xFEu8 && data[1] == 0xFFu8)) ||
            (data.len() >= 3 && data[0] == 0xEFu8 && data[1] == 0xBBu8 && data[2] == 0xBFu8)
         {
             Some(("text", "plain"))
         }
-        else if data.len() >= 1 && data.iter().any(|x| *x<=0x08u8 ||
+        else if data.iter().any(|x| *x<=0x08u8 ||
                                  *x==0x0Bu8 ||
                                  (*x>=0x0Eu8 && *x <= 0x1Au8) ||
                                  (*x>=0x1Cu8 && *x <= 0x1Fu8)) {
@@ -370,7 +370,6 @@ impl GroupedClassifier {
                 box ByteMatcher::application_pdf()
             ]
         }
-
     }
     fn plaintext_classifier() -> GroupedClassifier {
         GroupedClassifier{
@@ -1060,7 +1059,7 @@ mod tests {
         let class_type = Some((type_string, ""));
         test_sniff_classification(file,type_string,subtype_string,class_type);
     }
-
+    
     #[test]
     fn test_sniff_x_icon() {
         test_sniff_classification_sup("test.ico", "image", "x-icon");
@@ -1078,7 +1077,7 @@ mod tests {
 
     #[test]
     fn test_sniff_gif87a() {
-        test_sniff_classification_sup("test87a", "image", "gif");
+        test_sniff_classification_sup("test87a.gif", "image", "gif");
     }
 
     #[test]
